@@ -14,7 +14,7 @@ from io import StringIO
 
 from mockbuild import file_util
 from mockbuild.exception import Error
-from mockbuild.trace_decorator import traceLog
+from mockbuild.trace_decorator import getLog, traceLog
 
 requires_api_version = "1.1"
 
@@ -79,25 +79,29 @@ class TmtPlugin(object):
         # overlay bootstrap chroot into chroot
         subprocess.run(['rm', '-rf', self.workdir], check = True)
         os.mkdir(self.workdir)
+        getLog().info("tmt: overlay-mounting %s at %s", self.buildroot.bootstrap_buildroot.rootdir, self.buildroot.rootdir)
         subprocess.run(["mount", "-t", "overlay", "overlay",
             "-o", f"lowerdir={self.buildroot.bootstrap_buildroot.rootdir}",
             "-o", f"upperdir={self.buildroot.rootdir}",
             "-o", f"workdir={self.workdir}",
-            str(self.buildroot.rootdir)], check = True)
+            self.buildroot.rootdir], check = True)
         
     @traceLog()
     def mount_workdir(self):
-        self.workdir_root = str(self.config["workdir_root"])
+        self.workdir_root = self.config["workdir_root"]
         self.host_workdir_root = self.buildroot.rootdir + self.workdir_root
         # bind-mount tmt workdir into chroot
         subprocess.run(['rm', '-rf', self.host_workdir_root, self.buildroot.rootdir + '/tmp/unmount-bootstrap-chroot'], check = True)
         os.mkdir(self.host_workdir_root)
+        getLog().info("tmt: bind-mounting %s at %s", self.workdir_root, self.host_workdir_root)
         subprocess.run(["mount", "--bind", self.workdir_root, self.host_workdir_root], check = True)
     
     @traceLog()
     def umount_overlay(self):
-        subprocess.run(["umount", "-l", str(self.buildroot.rootdir)], check = True)
+        getLog().info("tmt: unmounting overlay at %s", self.buildroot.rootdir)
+        subprocess.run(["umount", "-l", self.buildroot.rootdir], check = True)
     
     @traceLog()
     def umount_workdir(self):
+        getLog().info("tmt: unmounting bind at %s", self.host_workdir_root)
         subprocess.run(["umount", "-l", self.host_workdir_root], check = True)
