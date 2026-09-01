@@ -232,7 +232,7 @@ class Unbreq:
 
         # pylint: disable=too-many-nested-blocks,invalid-name
         sorted_br_providers = sorted(br_providers, key = lambda k: len(br_providers[k]))
-        if len(sorted_br_providers) != 0 and len(sorted_br_providers[-1]) > 1:
+        if len(sorted_br_providers) != 0 and len(br_providers[sorted_br_providers[-1]]) > 1:
             for br in sorted_br_providers:
                 current_br_providers = br_providers[br]
                 if len(current_br_providers) == 1:
