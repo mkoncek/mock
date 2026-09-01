@@ -295,10 +295,10 @@ class Unbreq:
         if self.check_removed_files(p for _, ps in brs_can_be_removed for p in ps) is not None:
             # Now execute the query with an increasing number of packages to be
             # certain that they all can be removed together.
-            candidates_it = iter(brs_can_be_removed)
-            brs_can_be_removed: list[tuple[str, list[str]]] = [next(candidates_it)]
-            for br, providers in candidates_it:
-                path = self.check_removed_files((*(v for _, vs in brs_can_be_removed for v in vs), *providers))
+            brs_it = iter(brs_can_be_removed)
+            brs_can_be_removed: list[tuple[str, list[str]]] = [next(brs_it)]
+            for br, providers in brs_it:
+                path = self.check_removed_files((*(p for _, ps in brs_can_be_removed for p in ps), *providers))
                 if path is not None:
                     getLog().info(
                         "unbreq plugin: BuildRequires '%s' is needed because file %s was accessed",
