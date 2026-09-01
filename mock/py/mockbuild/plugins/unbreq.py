@@ -273,7 +273,7 @@ class Unbreq:
 
         # First check each BuildRequires separately to quickly exclude most of
         # the candidates.
-        candidates_providers: list[tuple[str, list[str]]] = []
+        brs_can_be_removed: list[tuple[str, list[str]]] = []
         for (br, providers), path in zip(self.buildrequires_providers.items(),
             self.pool.map(self.check_removed_files, (
                 providers for providers in self.buildrequires_providers.values()
@@ -286,16 +286,16 @@ class Unbreq:
             elif not providers:
                 getLog().info("unbreq plugin: rich dependency '%s' is not installed", br)
             else:
-                candidates_providers.append((br, providers))
+                brs_can_be_removed.append((br, providers))
 
-        if len(candidates_providers) == 0:
+        if len(brs_can_be_removed) == 0:
             return
 
         # Check if all the providers can be removed together.
-        if self.check_removed_files(p for _, ps in candidates_providers for p in ps) is not None:
+        if self.check_removed_files(p for _, ps in brs_can_be_removed for p in ps) is not None:
             # Now execute the query with an increasing number of packages to be
             # certain that they all can be removed together.
-            candidates_it = iter(candidates_providers)
+            candidates_it = iter(brs_can_be_removed)
             brs_can_be_removed: list[tuple[str, list[str]]] = [next(candidates_it)]
             for br, providers in candidates_it:
                 path = self.check_removed_files((*(v for _, vs in brs_can_be_removed for v in vs), *providers))
@@ -307,7 +307,7 @@ class Unbreq:
                 else:
                     brs_can_be_removed.append((br, providers))
 
-        for br, _ in candidates_providers:
+        for br, _ in brs_can_be_removed:
             getLog().warning("unbreq plugin: BuildRequires '%s' was not used", br)
 
     @traceLog()
